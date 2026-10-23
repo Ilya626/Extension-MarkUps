@@ -1,0 +1,20 @@
+.mu-settings label:not(.checkbox_label) { display: block; margin: 8px 0; }
+.mu-settings .text_pole { width: 100%; }
+.mu-card, .mu-note-card { border: 1px solid var(--SmartThemeBorderColor, #555); border-radius: 8px; padding: 10px; margin: 10px 0; }
+.mu-card > summary { cursor: pointer; font-weight: 600; }
+.mu-muted { opacity: .75; font-size: .9em; }
+.mu-row { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+.mu-row > .text_pole { flex: 1 1 130px; width: auto; min-width: 0; }
+.mu-settings .mu-row > button { white-space: nowrap; }
+.mu-note-head { justify-content: space-between; }
+.mu-note-head strong { overflow-wrap: anywhere; }
+.mu-usage { font-size: .9em; }
+.mu-over { color: #e6ab55; }
+.mu-entry { padding-top: 8px; border-top: 1px solid var(--SmartThemeBorderColor, #555); margin-top: 8px; }
+.mu-entry textarea { min-height: 70px; resize: vertical; }
+.mu-settings pre { white-space: pre-wrap; overflow-wrap: anywhere; font-size: .85em; }
+.mu-note-card { background: var(--SmartThemeBlurTintColor, #222); }
+.mu-note-card > strong { display: block; margin-bottom: 6px; }
+.mu-note-card .mu-note-body { white-space: pre-wrap; overflow-wrap: anywhere; }
+.mu-note-card .mu-note-entry + .mu-note-entry { margin-top: 6px; }
+.mu-settings .mu-save-row { justify-content: flex-end; }

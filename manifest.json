@@ -1,0 +1,13 @@
+{
+    "display_name": "Notes — MarkUps",
+    "loading_order": 55,
+    "requires": [],
+    "optional": [],
+    "js": "index.js",
+    "css": "style.css",
+    "generate_interceptor": "markupsPrepareContext",
+    "author": "Ilya626",
+    "version": "0.1.0",
+    "homePage": "https://github.com/Ilya626/Extension-MarkUps",
+    "auto_update": false
+}

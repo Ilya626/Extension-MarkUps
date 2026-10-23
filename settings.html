@@ -1,0 +1,79 @@
+<div class="mu-settings">
+    <div class="inline-drawer">
+        <div class="inline-drawer-toggle inline-drawer-header">
+            <b>📝 Notes — MarkUps · 0.1.0</b>
+            <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
+        </div>
+        <div class="inline-drawer-content">
+            <label class="checkbox_label"><input type="checkbox" id="mu_enabled"><span>Enable MarkUps</span></label>
+            <p id="mu_scope" class="mu-muted"></p>
+            <div class="mu-card">
+                <label>Where the model receives notes
+                    <select id="mu_position" class="text_pole">
+                        <option value="after_user">Immediately after the latest player message</option>
+                        <option value="end">After the conversation</option>
+                        <option value="before">Before the conversation</option>
+                        <option value="depth">Inside the conversation, at depth</option>
+                    </select>
+                </label>
+                <label id="mu_depth_row">Depth from the end<input id="mu_depth" class="text_pole" type="number" min="0" step="1"></label>
+                <div class="mu-muted">Both visible and hidden notes go to the model as a system message. These positions control context, not where notes appear in an RP post.</div>
+            </div>
+            <div id="mu_notes"></div>
+            <div class="mu-row">
+                <input id="mu_new_key" class="text_pole" placeholder="New instance key, e.g. quests" aria-label="New instance key">
+                <button id="mu_add_note" class="menu_button">Add instance</button>
+            </div>
+            <details class="mu-card">
+                <summary>Attach notes from another chat of this card</summary>
+                <label>Source chat<select id="mu_source_chat" class="text_pole"></select></label>
+                <label>Note instance<select id="mu_source_note" class="text_pole"></select></label>
+                <label>Attach as<select id="mu_attach_mode" class="text_pole"><option value="copy">Copy — independent, editable copy</option><option value="sync">Synchronize — the same instance in both chats</option></select></label>
+                <p class="mu-muted">Replaces the attachment with the same key in this chat. Other notes stay attached. Detaching only removes this chat's link.</p>
+                <button id="mu_attach" class="menu_button">Attach</button>
+            </details>
+            <details class="mu-card">
+                <summary>Commands and built-in regex</summary>
+                <p>One RP reply can include any number of these commands. Only attached instances are available. IDs use letters, numbers, underscores or hyphens.</p>
+                <pre>[mu:set visible groceries]
+Milk, bread, a brass key.
+[/mu]
+[mu:delete visible groceries]
+[mu:show visible start]
+[mu:show visible end]
+[mu:show visible here]
+[mu:hide hidden]
+[mu:limit hidden 1024]</pre>
+                <p class="mu-muted">Set creates or replaces one entry. Show/hide controls the whole instance. Put show … here where the note should appear. Inline instances without a marker appear at the end. A limit is a content budget: over-budget data is kept and highlighted, never silently cut.</p>
+                <label>Command parser (built in)<textarea id="mu_parser_regex" class="text_pole" rows="3" readonly></textarea></label>
+                <label>Hide commands from display and history (built in)<textarea id="mu_hide_regex" class="text_pole" rows="3" readonly></textarea></label>
+                <p class="mu-muted">MarkUps installs one named ST Regex rule for display/prompt cleanup, including unfinished streaming commands. No manual regex setup is needed. After processing, commands leave the message text and are retained in its MarkUps metadata. Opening an old chat does not execute them again.</p>
+            </details>
+            <details class="mu-card">
+                <summary>Import / Export — editable Markdown</summary>
+                <p class="mu-muted">Open the .md file in any text editor, or write your own. Plain .txt is accepted too. No JSON, UUIDs or escaping quotes.</p>
+                <label>Export<select id="mu_export_scope" class="text_pole"><option value="chat">Current chat notes — simple editable file</option><option value="card">All card chats — preserve shared instances</option></select></label>
+                <div class="mu-row"><button id="mu_export" class="menu_button">Export .md</button><button id="mu_import" class="menu_button">Import .md / .txt</button><button id="mu_template" class="menu_button">Download template</button></div>
+                <details><summary>Paste or write notes directly</summary><textarea id="mu_import_text" class="text_pole" rows="8" placeholder="## Note: visible&#10;### Entry: groceries&#10;Milk and bread." aria-label="Markdown notes to import"></textarea><button id="mu_import_paste" class="menu_button">Import text</button></details>
+                <details><summary>File example</summary><pre># MarkUps
+
+## Note: visible
+Title: Shopping list
+Visible: yes
+Post: end
+Limit: 512
+
+### Entry: groceries
+Milk, bread, a brass key.
+
+## Note: hidden
+Visible: no
+
+### Entry: plot
+The shopkeeper secretly works for the rival guild.</pre></details>
+                <p class="mu-muted">Instances and chat attachments are stored in this character card's MarkUps extension data. Card exports contain both visible and hidden notes. Hidden means omitted from the RP post, not hidden from the player in these settings. Chat metadata stores this chat's attachment ID.</p>
+            </details>
+            <div id="mu_status" class="mu-muted" role="status" aria-live="polite"></div>
+        </div>
+    </div>
+</div>
