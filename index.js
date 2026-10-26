@@ -1,5 +1,6 @@
 import { COMMAND_PATTERN, HIDE_PATTERN, parseCommands, stripCommands, contentText, newNote, newId, applyCommands, markedPost } from './commands.js';
 import { exportNotes, parseNotes, importNotes } from './note-files.js';
+import { renderLiveNotes } from './live-notes.js';
 
 const KEY = 'markups';
 const REGEX_ID = 'markups-command-cleanup-v1';
@@ -47,6 +48,7 @@ function scope() {
         }
     }
     record.name = ctx.chatId;
+    record.uiPlacement ??= 'between_messages';
     return { ctx, card, bank, record, chatKey: meta.chatKey };
 }
 
@@ -95,6 +97,7 @@ Commands (IDs: letters/numbers/_/-; command bodies: plain text):
 [mu:show visible here] — place the instance at this exact point in the RP post
 [mu:hide hidden]
 Replace visible/hidden with any attached key. Set replaces just one named entry, not the whole note. Delete removes just that entry. Show/hide applies to the whole instance. A here marker is needed in each reply that needs inline placement; without it, inline notes appear at the end. Omit commands when no update is needed. Do not include these commands in code fences or reasoning.
+Player display: ${s.record.uiPlacement === 'messages' ? 'Visible notes appear inside AI replies at start/end/here.' : 'Visible notes appear in a separate live list panel positioned by the player. Show/hide still changes visibility; start/end/here does not move this panel. Do not duplicate the lists in RP prose.'}
 ATTACHED INSTANCES:
 ${[...notes].map(([key, note]) => `INSTANCE ${key} | title=${JSON.stringify(note.title)} | ${note.visible ? 'VISIBLE' : 'HIDDEN'} | post=${note.placement} | ${note.tokens}/${note.limit} content tokens${note.tokens > note.limit ? ' (OVER BUDGET: shorten or increase the limit)' : ''}\n${contentText(note) || '(empty)'}`).join('\n\n')}
 [/MarkUps notes]`;
@@ -184,6 +187,21 @@ async function receive(s, index, message) {
     } else status(`Processed ${commands.length} note commands. Saved.`);
 }
 
+function refreshLiveNotes() {
+    renderLiveNotes(scope(), {
+        enabled: settings().enabled,
+        onCollapse: s => run(() => persist(s)),
+        onEdit: () => {
+            const drawer = document.querySelector('#extensions-settings-button');
+            const content = drawer?.querySelector('.drawer-content');
+            if (content && !$(content).is(':visible')) drawer.querySelector('.drawer-toggle')?.click();
+            const ownContent = document.querySelector('.mu-settings .inline-drawer-content');
+            if (ownContent && !$(ownContent).is(':visible')) document.querySelector('.mu-settings .inline-drawer-toggle')?.click();
+            setTimeout(() => document.querySelector('.mu-settings')?.scrollIntoView({ block: 'start', behavior: 'smooth' }), 250);
+        },
+    });
+}
+
 function paint(index) {
     const ctx = SillyTavern.getContext();
     const message = ctx.chat[index];
@@ -191,7 +209,7 @@ function paint(index) {
     const root = document.querySelector(`#chat .mes[mesid="${Number(index)}"] .mes_text`);
     if (!root) return;
     root.querySelectorAll('.mu-note-card').forEach(element => element.remove());
-    const views = settings().enabled ? message.extra?.[KEY]?.views || [] : [];
+    const views = settings().enabled && scope()?.record.uiPlacement === 'messages' ? message.extra?.[KEY]?.views || [] : [];
     if (views.some(view => view.placement === 'inline') && !message.extra?.display_text) {
         const raw = message.extra?.[KEY]?.raw;
         const text = raw && stripCommands(raw) === message.mes ? raw : message.mes || '';
@@ -199,9 +217,10 @@ function paint(index) {
     }
     const start = document.createDocumentFragment();
     for (const view of views) {
-        const card = document.createElement('aside');
+        const card = document.createElement('details');
         card.className = 'mu-note-card';
-        const title = document.createElement('strong');
+        card.open = true;
+        const title = document.createElement('summary');
         title.textContent = view.title;
         card.append(title);
         const body = document.createElement('div');
@@ -221,7 +240,7 @@ function paint(index) {
     root.prepend(start);
 }
 
-function paintAll() { SillyTavern.getContext().chat.forEach((_, index) => paint(index)); }
+function paintAll() { SillyTavern.getContext().chat.forEach((_, index) => paint(index)); refreshLiveNotes(); }
 function escape(text) { const span = document.createElement('span'); span.textContent = String(text); return span.innerHTML.replaceAll('"', '&quot;'); }
 const validKey = value => /^[a-z][\w-]*$/.test(value);
 
@@ -232,11 +251,28 @@ function sourceOptions() {
 }
 
 function renderSettings(force = false) {
+    refreshLiveNotes();
     if (!force && document.activeElement?.closest('.mu-card[data-key]') && document.activeElement.matches('input,textarea,select')) return;
     const s = scope();
     $('#mu_enabled').prop('checked', settings().enabled);
     $('#mu_scope').text(s ? `Card: ${s.card.name} · Chat: ${s.record.name}` : 'Open a character chat to manage its notes. Group chats are not supported in this version.');
     $('#mu_position').val(s?.record.position || 'after_user').prop('disabled', !s);
+    $('#mu_ui_placement').val(s?.record.uiPlacement || 'between_messages').prop('disabled', !s);
+    const display = {
+        between_messages: 'Default: your message → Notes → AI reply. After you send again: previous AI reply → Notes → your new message.',
+        before_ai: 'One live panel inside the chat, immediately before the latest AI reply.',
+        after_ai: 'One live panel inside the chat, immediately after the latest AI reply.',
+        above_input: 'One live panel outside chat messages, directly above the field where you type.',
+        messages: 'Each AI reply keeps its own snapshot. Select start/end/here inside each notebook below.',
+    };
+    $('#mu_display_order').text(display[s?.record.uiPlacement || 'between_messages']);
+    const order = {
+        after_user: 'System/setup → earlier chat → your latest message → MarkUps notes → AI reply',
+        before: 'System/setup → MarkUps notes → chat messages',
+        end: 'System/setup → chat messages → MarkUps notes',
+        depth: 'Count back this many chat messages from the end, then insert MarkUps notes.',
+    };
+    $('#mu_context_order').text(order[s?.record.position || 'after_user']);
     $('#mu_depth').val(s?.record.depth || 0);
     $('#mu_depth_row').toggle(s?.record.position === 'depth');
     $('#mu_add_note, #mu_attach, #mu_export, #mu_import').prop('disabled', !s);
@@ -245,8 +281,8 @@ function renderSettings(force = false) {
         return `<details class="mu-card" data-key="${escape(key)}" ${note.visible ? 'open' : ''}>
             <summary>${escape(note.title)} · ${escape(key)} <span class="mu-usage ${note.tokens > note.limit ? 'mu-over' : ''}">${note.tokens} / ${note.limit} tokens</span>${shared > 1 ? ` · shared by ${shared} chats` : ''}</summary>
             <label>Title<input class="mu-title text_pole" value="${escape(note.title)}"></label>
-            <div class="mu-row"><label class="checkbox_label"><input class="mu-visible" type="checkbox" ${note.visible ? 'checked' : ''}><span>Visible in RP posts</span></label></div>
-            <label>Where it appears in posts<select class="mu-placement text_pole"><option value="start" ${note.placement === 'start' ? 'selected' : ''}>At the start</option><option value="end" ${note.placement === 'end' ? 'selected' : ''}>At the end</option><option value="inline" ${note.placement === 'inline' ? 'selected' : ''}>At the model's here marker (otherwise at the end)</option></select></label>
+            <div class="mu-row"><label class="checkbox_label"><input class="mu-visible" type="checkbox" ${note.visible ? 'checked' : ''}><span>Show this list to the player</span></label></div>
+            <label ${s.record.uiPlacement !== 'messages' ? 'hidden' : ''}>Position inside AI replies<select class="mu-placement text_pole"><option value="start" ${note.placement === 'start' ? 'selected' : ''}>Before the AI prose</option><option value="end" ${note.placement === 'end' ? 'selected' : ''}>After the AI prose</option><option value="inline" ${note.placement === 'inline' ? 'selected' : ''}>At the model's here marker (otherwise after the prose)</option></select></label>
             <label>Content-token limit<input class="mu-limit text_pole" type="number" min="1" step="1" value="${note.limit}"></label>
             <div class="mu-entries">${note.entries.map(entryHtml).join('')}</div>
             <div class="mu-row"><input class="mu-new-entry text_pole" placeholder="Entry ID, e.g. groceries" aria-label="New entry ID"><button class="mu-add-entry menu_button">Add entry</button></div>
@@ -271,6 +307,7 @@ async function changed(s, message = 'Saved.') {
     await persist(s);
     await updateInjection();
     renderSettings(true);
+    paintAll();
     status(message);
 }
 
@@ -288,6 +325,14 @@ function bindUI() {
         s.record.depth = Math.max(0, Math.floor(Number($('#mu_depth').val()) || 0));
         await changed(s);
     }));
+    $('#mu_ui_placement').on('change', () => {
+        const placement = $('#mu_ui_placement').val();
+        run(async () => {
+            const s = scope(); if (!s) return;
+            s.record.uiPlacement = placement;
+            await changed(s);
+        });
+    });
     $('#mu_notes').on('click', '.mu-add-entry', function () {
         const card = $(this).closest('[data-key]');
         const id = card.find('.mu-new-entry').val().trim();
@@ -392,8 +437,13 @@ async function openChat() {
         if (s && message) return run(() => receive(s, index, message));
     });
     for (const type of [ctx.eventTypes.CHARACTER_MESSAGE_RENDERED, ctx.eventTypes.MESSAGE_UPDATED, ctx.eventTypes.MESSAGE_SWIPED].filter(Boolean)) {
-        ctx.eventSource.on(type, index => paint(index));
+        ctx.eventSource.on(type, index => { paint(index); refreshLiveNotes(); });
     }
+    for (const type of [ctx.eventTypes.USER_MESSAGE_RENDERED, ctx.eventTypes.MESSAGE_DELETED].filter(Boolean)) ctx.eventSource.on(type, refreshLiveNotes);
+    const chatElement = document.getElementById('chat');
+    if (chatElement) new MutationObserver(records => {
+        if (records.some(record => [...record.addedNodes, ...record.removedNodes].some(node => node.nodeType === 1 && node.matches('.mes')))) refreshLiveNotes();
+    }).observe(chatElement, { childList: true });
     await run(openChat);
-    console.info('[MarkUps] 0.1.0 loaded');
+    console.info('[MarkUps] 0.2.0 loaded');
 })().catch(error => { console.error('[MarkUps]', error); toastr.error(error.message, 'MarkUps initialization'); });

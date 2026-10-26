@@ -23,7 +23,7 @@ export function exportNotes(bank, current, allChats = false) {
         for (const entry of note.entries) lines.push(`### Entry: ${entry.id}`, bodyEscape(entry.text), '');
     }
     if (allChats) for (const [index, chat] of chats.entries()) {
-        lines.push(`## Chat: chat-${index + 1}`, `Name: ${chat.name}`, `Context: ${chat.position}`, `Depth: ${chat.depth || 0}`);
+        lines.push(`## Chat: chat-${index + 1}`, `Name: ${chat.name}`, `Context: ${chat.position}`, `Depth: ${chat.depth || 0}`, `Display: ${chat.uiPlacement || 'between_messages'}`);
         for (const ref of chat.bindings) if (aliases.has(ref.id)) lines.push(`${ref.key} -> ${aliases.get(ref.id)}`);
         lines.push('');
     }
@@ -51,7 +51,7 @@ export function parseNotes(text) {
             note = newNote(key, key !== 'hidden'); chat = null; notes.set(key, note); return;
         }
         if ((match = /^## Chat:\s*(.+)$/.exec(line))) {
-            finishEntry(); note = null; chat = { label: match[1].trim(), name: match[1].trim(), position: 'after_user', depth: 0, bindings: [] }; chats.push(chat); return;
+            finishEntry(); note = null; chat = { label: match[1].trim(), name: match[1].trim(), position: 'after_user', depth: 0, uiPlacement: 'between_messages', bindings: [] }; chats.push(chat); return;
         }
         if ((match = /^### Entry:\s*([\w-]+)\s*$/.exec(line)) && note) {
             finishEntry();
@@ -78,6 +78,7 @@ export function parseNotes(text) {
         if (chat && (match = /^Name:\s*(.+)$/.exec(line))) { chat.name = match[1]; return; }
         if (chat && (match = /^Context:\s*(after_user|end|before|depth)\s*$/.exec(line))) { chat.position = match[1]; return; }
         if (chat && (match = /^Depth:\s*(\d+)\s*$/.exec(line))) { chat.depth = Number(match[1]); return; }
+        if (chat && (match = /^Display:\s*(between_messages|before_ai|after_ai|above_input|messages)\s*$/.exec(line))) { chat.uiPlacement = match[1]; return; }
         if (chat && (match = /^([a-z][\w-]*)\s*->\s*([a-z][\w-]*)\s*$/i.exec(line))) {
             chat.bindings.push({ key: match[1].toLowerCase(), noteKey: match[2].toLowerCase() }); return;
         }
@@ -97,11 +98,11 @@ export function importNotes(bank, current, parsed) {
         for (const chat of parsed.chats) {
             if (chat === source) continue;
             const existing = Object.values(bank.chats).find(item => item !== current && item.name === chat.name);
-            const record = { name: chat.name, position: chat.position, depth: chat.depth, bindings: refs(chat) };
+            const record = { name: chat.name, position: chat.position, depth: chat.depth, uiPlacement: chat.uiPlacement, bindings: refs(chat) };
             if (existing) Object.assign(existing, record);
             else bank.chats[newId()] = record;
         }
-        Object.assign(current, { position: source.position, depth: source.depth, bindings: refs(source) });
+        Object.assign(current, { position: source.position, depth: source.depth, uiPlacement: source.uiPlacement, bindings: refs(source) });
     } else {
         for (const [key, note] of parsed.notes) {
             current.bindings = current.bindings.filter(ref => ref.key !== key);

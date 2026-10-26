@@ -14,7 +14,21 @@
 .mu-entry textarea { min-height: 70px; resize: vertical; }
 .mu-settings pre { white-space: pre-wrap; overflow-wrap: anywhere; font-size: .85em; }
 .mu-note-card { background: var(--SmartThemeBlurTintColor, #222); }
-.mu-note-card > strong { display: block; margin-bottom: 6px; }
+.mu-note-card > summary { cursor: pointer; font-weight: 600; margin-bottom: 6px; }
 .mu-note-card .mu-note-body { white-space: pre-wrap; overflow-wrap: anywhere; }
 .mu-note-card .mu-note-entry + .mu-note-entry { margin-top: 6px; }
 .mu-settings .mu-save-row { justify-content: flex-end; }
+.mu-settings [hidden] { display: none !important; }
+.mu-context-order { padding: 6px 0; font-size: .9em; overflow-wrap: anywhere; }
+.mu-live-panel { flex: 0 0 auto; min-height: 0; width: 100%; box-sizing: border-box; z-index: 30; border: 1px solid var(--SmartThemeBorderColor, #555); border-radius: 8px; background: var(--SmartThemeBlurTintColor, #222); }
+.mu-live-panel > summary { cursor: pointer; padding: 6px 10px; min-height: 34px; box-sizing: border-box; }
+.mu-live-title { margin-right: 10px; }
+.mu-live-edit { display: inline-block; float: right; padding: 3px 8px; margin: 0; font-size: .85em; white-space: nowrap; width: auto; }
+.mu-live-content { max-height: min(30dvh, 260px); overflow-y: auto; overscroll-behavior: contain; padding: 0 10px 8px; }
+.mu-live-list { border-top: 1px solid var(--SmartThemeBorderColor, #555); padding-top: 5px; margin-top: 4px; }
+.mu-live-list > summary { cursor: pointer; overflow-wrap: anywhere; }
+.mu-live-list .mu-usage { display: block; opacity: .75; padding: 2px 0 2px 16px; }
+.mu-live-list ul { padding-left: 24px; margin: 6px 0; }
+.mu-live-list li { white-space: pre-wrap; overflow-wrap: anywhere; margin: 5px 0; }
+.mu-live-list p { margin: 6px 0; }
+.mu-live-panel.mu-live-in-chat { width: auto; margin: 8px 10px; }

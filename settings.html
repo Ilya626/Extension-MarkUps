@@ -1,23 +1,39 @@
 <div class="mu-settings">
     <div class="inline-drawer">
         <div class="inline-drawer-toggle inline-drawer-header">
-            <b>📝 Notes — MarkUps · 0.1.0</b>
+            <b>📝 Notes — MarkUps · 0.2.0</b>
             <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
         </div>
         <div class="inline-drawer-content">
             <label class="checkbox_label"><input type="checkbox" id="mu_enabled"><span>Enable MarkUps</span></label>
             <p id="mu_scope" class="mu-muted"></p>
             <div class="mu-card">
-                <label>Where the model receives notes
+                <strong>Visible lists — on your screen</strong>
+                <label>List position
+                    <select id="mu_ui_placement" class="text_pole">
+                        <option value="between_messages">Between latest player / AI messages</option>
+                        <option value="before_ai">Before the latest AI reply</option>
+                        <option value="after_ai">After the latest AI reply</option>
+                        <option value="above_input">Above the message box</option>
+                        <option value="messages">Inside each AI reply</option>
+                    </select>
+                </label>
+                <div id="mu_display_order" class="mu-context-order"></div>
+                <div class="mu-muted">The live panel shows current visible lists, including empty ones. Click Notes or a list title to collapse it. Hidden notebooks stay in the editor.</div>
+            </div>
+            <div class="mu-card">
+                <strong>Notes sent to the AI — context position</strong>
+                <label>Insert the system message with notes
                     <select id="mu_position" class="text_pole">
-                        <option value="after_user">Immediately after the latest player message</option>
-                        <option value="end">After the conversation</option>
-                        <option value="before">Before the conversation</option>
-                        <option value="depth">Inside the conversation, at depth</option>
+                        <option value="after_user">After your latest message (default)</option>
+                        <option value="before">Before chat — after system/setup</option>
+                        <option value="end">After all chat messages</option>
+                        <option value="depth">Inside chat — at message depth</option>
                     </select>
                 </label>
                 <label id="mu_depth_row">Depth from the end<input id="mu_depth" class="text_pole" type="number" min="0" step="1"></label>
-                <div class="mu-muted">Both visible and hidden notes go to the model as a system message. These positions control context, not where notes appear in an RP post.</div>
+                <div id="mu_context_order" class="mu-context-order"></div>
+                <div class="mu-muted">Both visible and hidden notebooks go to the AI here. This setting does not move the lists on your screen.</div>
             </div>
             <div id="mu_notes"></div>
             <div class="mu-row">
@@ -44,7 +60,7 @@ Milk, bread, a brass key.
 [mu:show visible here]
 [mu:hide hidden]
 [mu:limit hidden 1024]</pre>
-                <p class="mu-muted">Set creates or replaces one entry. Show/hide controls the whole instance. Put show … here where the note should appear. Inline instances without a marker appear at the end. A limit is a content budget: over-budget data is kept and highlighted, never silently cut.</p>
+                <p class="mu-muted">Set creates or replaces one entry. Show/hide controls the whole instance. Start/end/here positions apply only in Inside each AI reply mode; they do not move your live panel. Inline instances without a marker appear at the end. A limit is a content budget: over-budget data is kept and highlighted, never silently cut.</p>
                 <label>Command parser (built in)<textarea id="mu_parser_regex" class="text_pole" rows="3" readonly></textarea></label>
                 <label>Hide commands from display and history (built in)<textarea id="mu_hide_regex" class="text_pole" rows="3" readonly></textarea></label>
                 <p class="mu-muted">MarkUps installs one named ST Regex rule for display/prompt cleanup, including unfinished streaming commands. No manual regex setup is needed. After processing, commands leave the message text and are retained in its MarkUps metadata. Opening an old chat does not execute them again.</p>
@@ -71,7 +87,7 @@ Visible: no
 
 ### Entry: plot
 The shopkeeper secretly works for the rival guild.</pre></details>
-                <p class="mu-muted">Instances and chat attachments are stored in this character card's MarkUps extension data. Card exports contain both visible and hidden notes. Hidden means omitted from the RP post, not hidden from the player in these settings. Chat metadata stores this chat's attachment ID.</p>
+                <p class="mu-muted">Instances and chat attachments are stored in this character card's MarkUps extension data. Card exports contain both visible and hidden notes. Hidden means omitted from the live panel and RP posts; you can still edit it here. Chat metadata stores this chat's attachment ID.</p>
             </details>
             <div id="mu_status" class="mu-muted" role="status" aria-live="polite"></div>
         </div>
