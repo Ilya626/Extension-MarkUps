@@ -1,6 +1,6 @@
 # Notes — MarkUps
 
-A small SillyTavern extension for shopping lists, quests, plans and other notes that the model can maintain while writing its normal RP reply. Version 0.2.0.
+A small SillyTavern extension for shopping lists, quests, plans and other notes that the model can maintain while writing its normal RP reply. Version 0.2.1.
 
 ## What is a note?
 
@@ -11,7 +11,7 @@ Every new empty character chat starts with two notebooks:
 | Default key | What it is for | Model receives it | Player sees it |
 |---|---|---|---|
 | `visible` | Shopping lists, quests, reminders | Yes | In the live Notes panel and the note editor |
-| `hidden` | Continuity, plans, future story events | Yes | In the note editor only |
+| `hidden` | World truth, hidden causes, clues, NPC knowledge and intentions | Yes | In the note editor only |
 
 The keys are just names. You can make `hidden` visible or hide `visible`. Each notebook has its own **512-token budget** by default. You can create additional notebooks and edit everything in **Extensions → Notes — MarkUps**.
 
@@ -36,6 +36,45 @@ MarkUps adds a **system message through ST's normal extension-prompt mechanism**
 The model writes normal RP prose and any note commands in **the same response**. MarkUps processes those commands and removes them from the displayed post and ordinary message history. The next model request receives the updated notes.
 
 This uses a **text command format**, not API function calling. There is no separate AI request for updating notes. The model may omit commands when nothing needs changing; the existing notes remain available.
+
+## Hidden notes hold the world's story
+
+The installed model instruction treats story notes as persistent master notes. Plot consists of causes, interests, evidence and NPC activity that the player can engage with. It is not a prediction of what the player will say or choose. Shopping lists and other ordinary notebooks still work as before.
+
+Use short labels inside normal entry text to distinguish:
+
+| Meaning | What to keep |
+|---|---|
+| Established fact | Something supported by the history, profiles or settled notes. A witness's statement may still be false. |
+| New master decision | A compatible new truth about the world: an unseen cause, motive, relationship or existing clue. Label it as authored now, not as an episode already played. |
+| NPC intention | A goal and feasible plan. NPCs can act independently; plans can be interrupted and their outcomes are not guaranteed. |
+| Knowledge, belief, unknown | Who learned what and how, what they merely suspect, and what they do not know. A secret known to the master need not be known to an NPC. |
+| Clue and revelation | What trace exists, what it actually proves and how someone could encounter it. Availability is not automatic discovery. |
+
+These are ordinary text labels, not additional commands or a required schema. The model records selected new world decisions using the existing `set` command, preserves them across later turns, and updates intentions when actions actually occur. It may leave questions unresolved. It must preserve established events and the setting rather than invent a twist that contradicts them. Its instructions also prohibit deciding the player's future speech, feelings, choices or actions.
+
+### A completely fictional example
+
+In a fictional museum, archivist Ira receives an anonymous note asking her to check the inventory. The player asks her to examine the gallery's closure order and says they intend to inspect the gallery. These are the example's starting premises.
+
+The master can now decide that restorer Lev sent the note because someone forced him to sign an altered inventory, and that he kept the original. This is **world truth** explaining an established message. The cause may already exist in world time; its authorship now does not mean a past scene showed it. Ira still does not know the sender.
+
+Lev **intends** to leave a copy in the archive at noon. That gives him his own activity; access restrictions or interference can change it. The copy appears there only after he actually delivers it. It shows an altered exhibit number, which does not by itself prove theft or the director's guilt.
+
+```text
+[mu:set hidden inventory]
+Master decision: Lev sent the anonymous note and kept the original inventory.
+Knowledge: Lev knows; Ira knows only the anonymous note and closure order.
+Intention: Leave a copy in the archive at noon if access remains open. Not done yet.
+Clue: A changed exhibit number; it does not establish who ordered the alteration.
+Reveal: The original, a delivered copy or Lev's testimony can expose the discrepancy.
+Player: Do not decide their route, discovery, trust or accusation.
+[/mu]
+```
+
+The model must not write “the player enters by the side door, finds the copy, believes Lev and accuses the director” as a settled plan or fact. Those decisions belong to the player. The [editable template](MarkUps-template.md) contains the full example with separate entries; it is optional sample content, not a world automatically added to existing chats.
+
+Hidden notes remain available to the model on later requests, but should reach RP prose only through plausible perception, documents, testimony and the permitted viewpoint. Hidden means omitted from the live panel and RP posts; the human player can inspect or edit the notes in settings and exports. A prompt guides model behavior; it does not guarantee that a model will obey every boundary. The existing [swipe and regeneration behavior](#copy-or-synchronize-across-chats) still applies: notes are persistent current state and do not automatically roll back with an older reply.
 
 ## One reply, normal prose and note commands
 
@@ -211,6 +250,12 @@ Placement is refreshed through ST's generation interceptor after the new player 
 Commands are removed from ordinary assistant-message text after processing, so other summarizers receive the RP prose rather than hidden command bodies. The original command-bearing reply and the visible snapshot are retained in that message's MarkUps metadata.
 
 License: MIT, see [LICENSE](LICENSE).
+
+## Changes in 0.2.1
+
+- The active model instruction now supports persistent story truth: compatible new causes, motives and clues, separate from established events, NPC intentions and beliefs.
+- Added explicit NPC knowledge and revelation boundaries, independent NPC activity and protection of the player's choices.
+- Updated the editable template and settings explanation with a completely fictional example. Command syntax, storage and existing note state are unchanged.
 
 ## Changes in 0.2.0
 
