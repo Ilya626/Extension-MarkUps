@@ -1,6 +1,6 @@
 # Notes — MarkUps
 
-A small SillyTavern extension for shopping lists, quests, plans and other notes that the model can maintain while writing its normal RP reply. Version 0.2.1.
+A small SillyTavern extension for shopping lists, quests, plans and other notes that the model can maintain while writing its normal RP reply. Version 0.2.2.
 
 ## What is a note?
 
@@ -250,6 +250,11 @@ Placement is refreshed through ST's generation interceptor after the new player 
 Commands are removed from ordinary assistant-message text after processing, so other summarizers receive the RP prose rather than hidden command bodies. The original command-bearing reply and the visible snapshot are retained in that message's MarkUps metadata.
 
 License: MIT, see [LICENSE](LICENSE).
+
+## Changes in 0.2.2
+
+- Shortened the runtime instruction while preserving story truth, NPC knowledge and intentions, revelation boundaries and player agency. Command syntax and stored notes are unchanged.
+- Instruction overhead in the default live-panel mode: 951 → 454 tokens (52% less), measured with SillyTavern's installed `tiktoken` using `cl100k_base`, excluding notebook headers and content. Per-reply mode: 923 → 457 tokens. Full examples remain in this README and the optional template.
 
 ## Changes in 0.2.1
 

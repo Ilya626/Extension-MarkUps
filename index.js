@@ -87,23 +87,19 @@ function installRegex() {
 function promptText(s) {
     const notes = attached(s);
     return `[MarkUps notes: persistent state, not dialogue]
-Write the RP reply normally. In the SAME reply you may update the attached notes using the commands below. Commands are processed by MarkUps and hidden from the displayed post. Use only the listed instance keys. Only the player creates or attaches instances.
-Each instance has its own content-token budget, initially 512. Token usage is shown below. Keep notes concise; you may raise a limit yourself when needed. Never erase facts merely to satisfy a budget. Hidden notebooks can hold persistent master notes: plot truth, not just a recap or guesses about the player's next move. Visible notebooks hold player-facing lists and reminders. Use the actual visibility shown below, not the key's name; never reveal a notebook merely to preserve a secret.
-In story notes distinguish established facts from new master decisions, NPC intentions, attributed beliefs and unknowns. Use short plain-text labels inside entries; these are meanings, not new command syntax. Established facts come from the supplied history, profiles or previously settled notes. A character's claim establishes what they said, not necessarily its truth. Missing evidence remains unknown.
-You may creatively settle compatible new world truth: hidden causes, NPC motives, existing clues, relationships or background conditions. Record the selected decision in a hidden entry so later turns retain it. Mark it as a new master decision, not as something already played, discovered or agreed by the player. A hidden cause may predate the current scene in world time without having appeared in a past reply. Preserve the setting, character profiles and established events; do not overwrite them to fit a twist. Keep settled causes consistent, updating entries when events genuinely change them or the player corrects them. Do not fill every unknown or add unrelated subplots just to update notes.
-For relevant NPCs retain what they want, what they can do, what they know and how they learned it, what they wrongly believe, and what they do not know. Keep world truth separate from character knowledge. A secret unknown to an NPC is not something that NPC is withholding. An NPC's plan is an intention, not a completed event or guaranteed outcome: they may attempt feasible actions on their own, and interference or new events may change the plan. Update the note when the action actually occurs. A clue can exist without being found, and may support less than the whole truth.
-Keep revelation separate from truth: note who knows a secret and what perception, document or testimony could expose it. Reveal it in RP only through a plausible in-world route and the permitted viewpoint; do not automatically copy hidden causes, motives or notes into dialogue or narration. The player can inspect all notebooks in settings; hidden is a presentation setting, not secrecy from the human player.
-Never write the player's future speech, thoughts, feelings, choices or actions into notes as decided facts. Do not forecast a conversation, guarantee the player's discovery or trust, or force them onto an NPC's planned route. Prepare a coherent situation and active NPCs, respond to the player's actual move, preserve contested outcomes, and leave the next meaningful player decision open. For example, a restorer kept the original inventory is world truth; intends to leave a copy at noon is an NPC plan; the player finds it and accuses the director is not yours to decide.
-Commands (IDs: letters/numbers/_/-; command bodies: plain text):
-[mu:set visible entry_id]new or replacement entry text[/mu]
-[mu:set hidden inventory]Master decision: The restorer kept the original inventory. Knowledge: only the restorer knows where it is. Intention: leave a copy in the archive at noon; not done yet. Reveal: access to the copy or the restorer's testimony, not automatic disclosure.[/mu]
+Reply normally; include needed note commands in the same reply, outside code fences and reasoning. Commands are hidden. Only the player creates/attaches instances; use listed keys. Budgets are per instance: keep entries concise, raise limits if needed, never discard facts for space. Use actual visibility, not key names: visible lists are player-facing; keep secrets in hidden instances, which the human can inspect in settings.
+Hidden story notes: briefly label established facts, new master decisions, NPC intentions, knowledge/beliefs and unknowns in plain text. Claims need not be true. You may settle relevant hidden causes, motives or clues consistent with history, profiles and settled truth; label new decisions, never pretend they were played or discovered. Causes may predate the scene. Do not fill every unknown. Update truth only for actual changes or player corrections.
+Track relevant NPC goals, capabilities, knowledge sources, false beliefs and unknowns. World truth is not character knowledge: an ignorant NPC is not withholding a secret. NPCs may act independently, but plans are intentions, not completed events or guaranteed outcomes. Clues may remain undiscovered or reveal only part of the truth. Record who knows and plausible discovery routes; disclose only through in-world evidence and the permitted viewpoint.
+Never decide the player's future speech, thoughts, feelings, choices or actions, guarantee discoveries/trust, script conversations or force the player onto an NPC's route. Respond to actual player moves; leave contested outcomes and player decisions open.
+Commands (entry IDs: letters/numbers/_/-; bodies: plain text; replace visible/hidden with attached keys):
+[mu:set visible entry_id]entry text[/mu]
 [mu:delete visible entry_id]
 [mu:limit hidden 1024]
 [mu:show visible start] or [mu:show visible end]
-[mu:show visible here] — place the instance at this exact point in the RP post
+[mu:show visible here]
 [mu:hide hidden]
-Replace visible/hidden with any attached key. Set replaces just one named entry, not the whole note. Delete removes just that entry. Show/hide applies to the whole instance. A here marker is needed in each reply that needs inline placement; without it, inline notes appear at the end. Omit commands when no update is needed. Do not include these commands in code fences or reasoning.
-Player display: ${s.record.uiPlacement === 'messages' ? 'Visible notes appear inside AI replies at start/end/here.' : 'Visible notes appear in a separate live list panel positioned by the player. Show/hide still changes visibility; start/end/here does not move this panel. Do not duplicate the lists in RP prose.'}
+Set replaces one entry; delete removes one. Show/hide affects the whole instance. Omit commands when unchanged.
+Player display: ${s.record.uiPlacement === 'messages' ? 'Visible notes appear at start/end/here of AI replies. Repeat here at the desired point each reply; otherwise inline notes fall at the end.' : 'Visible notes use a player-positioned live panel; start/end/here cannot move it. Do not duplicate lists in RP prose.'}
 ATTACHED INSTANCES:
 ${[...notes].map(([key, note]) => `INSTANCE ${key} | title=${JSON.stringify(note.title)} | ${note.visible ? 'VISIBLE' : 'HIDDEN'} | post=${note.placement} | ${note.tokens}/${note.limit} content tokens${note.tokens > note.limit ? ' (OVER BUDGET: shorten or increase the limit)' : ''}\n${contentText(note) || '(empty)'}`).join('\n\n')}
 [/MarkUps notes]`;
@@ -451,5 +447,5 @@ async function openChat() {
         if (records.some(record => [...record.addedNodes, ...record.removedNodes].some(node => node.nodeType === 1 && node.matches('.mes')))) refreshLiveNotes();
     }).observe(chatElement, { childList: true });
     await run(openChat);
-    console.info('[MarkUps] 0.2.0 loaded');
+    console.info('[MarkUps] 0.2.2 loaded');
 })().catch(error => { console.error('[MarkUps]', error); toastr.error(error.message, 'MarkUps initialization'); });
